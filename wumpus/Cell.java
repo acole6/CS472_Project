@@ -43,6 +43,12 @@ public class Cell
   {
     return status;
   }
+  
+  public boolean equalsIgnoreStatus(Cell cell)
+  {
+	  if(cell == null) return false;
+	  return this.location.getX() == cell.location.getX() && this.location.getY() == cell.location.getY();
+  }
 
   @Override
   public String toString()

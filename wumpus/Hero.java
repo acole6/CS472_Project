@@ -17,4 +17,6 @@ public interface Hero
 	void foundGold(boolean found);
 	
 	Decision makeDecision(boolean[] percepts);
+	
+	void reset();
 }

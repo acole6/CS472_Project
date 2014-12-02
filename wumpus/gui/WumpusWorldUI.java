@@ -17,7 +17,7 @@ import javax.swing.SwingUtilities;
 import wumpus.Direction;
 import wumpus.GameBoard;
 import wumpus.DumbHero;
-import wumpus.Simulator;
+import wumpus.Hero;
 import wumpus.Status;
 
 public class WumpusWorldUI extends JPanel
@@ -59,9 +59,17 @@ public class WumpusWorldUI extends JPanel
 	
 	private JButton start;
 	
+	private JButton restart;
+	
+	private JButton step;
+	
+	private JButton pause;
+	
 	private JLabel pitLabel;
 	
 	private int sleepTime;
+	
+	private boolean paused = false;
 	
 	private WumpusWorldUI(int sleepTime)
 	{
@@ -232,6 +240,21 @@ public class WumpusWorldUI extends JPanel
 		startButtons.add(start);
 		start.setEnabled(false);
 		start.addActionListener(new startButtonHandler());
+		
+		step = new JButton("Step");
+		startButtons.add(step);
+		step.setEnabled(false);
+		step.addActionListener(new stepButtonHandler());
+		
+		pause = new JButton("Pause");
+		startButtons.add(pause);
+		pause.setEnabled(false);
+		pause.addActionListener(new pauseButtonHandler());
+		
+		restart = new JButton("Restart");
+		startButtons.add(restart);
+		restart.setEnabled(false);
+		restart.addActionListener(new restartButtonHandler());
 	    
 	    this.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 	    
@@ -349,14 +372,19 @@ public class WumpusWorldUI extends JPanel
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
+			start.setEnabled(false);
+			restart.setEnabled(true);
+			pause.setEnabled(true);
+			paused = false;
 			new Thread()
 			{
 				public void run()
 				{
-					Simulator sim = new Simulator(board);
-					while(!sim.gameOver())
+					while(!board.gameOver() && !paused)
 					{
-						sim.move();
+						Hero hero = board.getHero();
+						board.advanceBoard();
+						System.out.println("Hero location: " + (int) hero.getLocation().getX() + ", " + (int) hero.getLocation().getY());
 						repaint();
 						try 
 						{
@@ -366,6 +394,53 @@ public class WumpusWorldUI extends JPanel
 					}
 				}
 			}.start();
+		}
+	}
+	
+	private class restartButtonHandler implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			start.setEnabled(true);
+			restart.setEnabled(false);
+			pause.setEnabled(false);
+			board.reset();
+			board.getCell((int) wumpus.getX(), (int) wumpus.getY()).setStatus(Status.WUMPUS);
+			board.getCell((int) gold.getX(), (int) gold.getY()).setStatus(Status.GOLD);
+			for(int i = 0; i < pits.length; i++)
+			{
+				Point pit = pits[i];
+				board.getCell((int) pit.getX(), (int) pit.getY()).setStatus(Status.PIT);
+			}
+			repaint();
+		}
+	}
+	
+	private class pauseButtonHandler implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			paused = true;
+			start.setEnabled(true);
+			step.setEnabled(true);
+			restart.setEnabled(true);
+		}
+	}
+	
+	private class stepButtonHandler implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			start.setEnabled(true);
+			pause.setEnabled(false);
+			restart.setEnabled(true);
+			Hero hero = board.getHero();
+			board.advanceBoard();
+			System.out.println("Hero location: " + (int) hero.getLocation().getX() + ", " + (int) hero.getLocation().getY());
+			repaint();
 		}
 	}
 }

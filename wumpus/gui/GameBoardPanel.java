@@ -81,6 +81,8 @@ public class GameBoardPanel extends JPanel
 	  	case PIT: return ImageIO.read(new File(path + "pit.png"));
 	  	case GOLD: return ImageIO.read(new File(path + "gold.png"));
 	  	case EMPTY: return ImageIO.read(new File(path + "white.png"));
+	  	case DEAD_HERO: return ImageIO.read(new File(path + "dead_hero.png"));
+	  	case DEAD_WUMPUS: return ImageIO.read(new File(path + "dead_wumpus.png"));
 	  }
 	  return ImageIO.read(new File("C:/cs336/workspace/images/white.png"));
   }

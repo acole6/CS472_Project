@@ -52,4 +52,6 @@ public abstract class AbstractHero implements Hero
 	}
 	
 	public abstract Decision makeDecision(boolean[] perceptes);
+	
+	public abstract void reset();
 }

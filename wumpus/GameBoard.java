@@ -97,14 +97,31 @@ public class GameBoard
 	  return hero;
   }
   
+  public void reset()
+  {
+	  for(int i = 0; i < getRows(); i++)
+	  {
+		  for(int j = 0; j < getColumns(); j++)
+		  {
+			cells[i][j].setStatus(Status.EMPTY);
+		  }
+	  }
+	  gameOver = false;
+	  hero.reset();
+	  hero.foundGold(false);
+	  hero.setLocation(0, 0);
+	  hero.setDirection(Direction.DOWN);
+	  percepts = new boolean[5];
+  }
+  
   public void updateHero(int r, int c)
   {
 	  hero.setLocation(r, c);
-	  cells[r][c].setStatus(cells[r][c].getStatus());
   }
   
-  public boolean processHeroDecision(Decision decision)
+  public void advanceBoard()
   {
+	  Decision decision = hero.makeDecision(getPercepts());
 	  if(decision instanceof GrabDecision)
 	  {
 		  if((boolean) decision.getDecision())
@@ -114,7 +131,7 @@ public class GameBoard
 			  if(cells[r][c].getStatus() == Status.GOLD)
 			  {
 				  hero.foundGold(true);
-				  return true;
+				  cells[r][c].setStatus(Status.EMPTY);
 			  }
 		  }  
 	  }
@@ -126,18 +143,20 @@ public class GameBoard
 		  if(r < 0 || r > cells.length - 1 || c < 0 || c > cells[0].length - 1)
 		  {
 			  percepts[3] = true;
-			  return false;
 		  }
 		  else
 		  {
 			  if(cells[r][c].getStatus() == Status.PIT || cells[r][c].getStatus() == Status.WUMPUS)
 			  {
+				  hero.setLocation(-1, -1);
+				  cells[r][c].setStatus(Status.DEAD_HERO);
 				  gameOver = true;
-				  return false;
 			  }
-			  updateHero(r, c);
-			  percepts[3] = false;
-			  return true;
+			  else
+			  {
+				  updateHero(r, c);
+				  percepts[3] = false;
+			  }
 		  }
 	  }
 	  else if(decision instanceof TurnDecision)
@@ -145,7 +164,6 @@ public class GameBoard
 		  updateHeroDirection((Turn) decision.getDecision());
 		  updateHero((int) hero.getLocation().getX(), (int) hero.getLocation().getY());
 		  percepts[3] = false;
-		  return true;
 	  }
 	  else if(decision instanceof ClimbDecision)
 	  {
@@ -154,11 +172,9 @@ public class GameBoard
 			  if(hero.getLocation().getX() == 0 && hero.getLocation().getY() == 0)
 			  {
 				  gameOver = true;
-				  return true;
 			  }
 		  }
 	  }
-	  return false;
   }
   
   private void updateHeroDirection(Turn turn)

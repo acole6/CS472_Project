@@ -8,12 +8,22 @@ public class DumbHero extends AbstractHero
 {
 	private ArrayList<Cell> visited;
 	private boolean turned;
+	private Cell previousCell;
 	
 	public DumbHero(Direction direction)
 	{
 		super(direction);
 		visited = new ArrayList<Cell>();
 		turned = false;
+		previousCell = null;
+	}
+	
+	@Override
+	public void reset()
+	{
+		turned = false;
+		previousCell = null;
+		visited.clear();
 	}
 	
 	@Override
@@ -28,21 +38,31 @@ public class DumbHero extends AbstractHero
 		{
 			cell.setStatus(Status.EMPTY);
 		}
-		if(!visited.contains(cell)) visited.add(cell);
+		if(!cell.equalsIgnoreStatus(previousCell) && !foundGold && !percepts[2]) 
+		{
+			visited.add(cell);
+			previousCell = cell;
+		}
 		
 		if(foundGold)
 		{
 			if(location.getX() == 0 && location.getY() == 0) 
 			{
 				System.out.println("Made climb decision");
+				visitedCells();
 				return new ClimbDecision(true);
 			}
-			//else follow path back, so need to figure out direction and how to retrace steps
+			else
+			{
+				visitedCells();
+				return retraceSteps();
+			}
 		}
 		
 		if(percepts[2]) //glitter, means gold
 		{
 			System.out.println("Made grab decision");
+			visitedCells();
 			return new GrabDecision(true);
 		}
 	
@@ -54,12 +74,14 @@ public class DumbHero extends AbstractHero
 			{
 				System.out.println("Made turn left decision");
 				turned = true;
+				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else
 			{
 				System.out.println("Made turn right decision");
 				turned = true;
+				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 		}
@@ -71,18 +93,21 @@ public class DumbHero extends AbstractHero
 			{
 				System.out.println("Made turn left decision");
 				turned = true;
+				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(move == 1 && !turned)
 			{
 				System.out.println("Made turn right decision");
 				turned = true;
+				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else
 			{
 				System.out.println("Made move forward decision");
 				turned = false;
+				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 		}
@@ -90,6 +115,7 @@ public class DumbHero extends AbstractHero
 		{
 			System.out.println("Made move forward decision");
 			turned = false;
+			visitedCells();
 			return new MoveDecision(moveForward());
 		}
 	}
@@ -115,5 +141,140 @@ public class DumbHero extends AbstractHero
 		{
 			return new Point(row, col + 1);
 		}
+	}
+	
+	private Decision retraceSteps()
+	{
+		if(visited.isEmpty()) return new ClimbDecision(true);
+		
+		Cell previous = visited.get(visited.size() - 1);
+		int prevRow = (int) previous.getLocation().getX();
+		int prevCol = (int) previous.getLocation().getY();
+		int row = (int) location.getX();
+		int col = (int) location.getY();
+		
+		int r = row - prevRow;
+		int c = col - prevCol;
+		
+		if(r < 0 && c == 0)
+		{
+			if(direction == Direction.UP)
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+			else if(direction == Direction.DOWN)
+			{
+				System.out.println("Made move forward decision");
+				visited.remove(previous);
+				visitedCells();
+				return new MoveDecision(moveForward());
+			}
+			else if(direction == Direction.LEFT)
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+			else
+			{
+				System.out.println("made turn right decision");
+				visitedCells();
+				return new TurnDecision(Turn.RIGHT);
+			}
+		}
+		else if(r > 0 && c == 0)
+		{
+			if(direction == Direction.UP)
+			{
+				System.out.println("Made move forward decision");
+				visited.remove(previous);
+				visitedCells();
+				return new MoveDecision(moveForward());
+			}
+			else if(direction == Direction.DOWN)
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+			else if(direction == Direction.LEFT)
+			{
+				visitedCells();
+				return new TurnDecision(Turn.RIGHT);
+			}
+			else
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+		}
+		else if(r == 0 && c < 0)
+		{
+			if(direction == Direction.UP)
+			{
+				System.out.println("made turn right decision");
+				visitedCells();
+				return new TurnDecision(Turn.RIGHT);
+			}
+			else if(direction == Direction.DOWN)
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+			else if(direction == Direction.LEFT)
+			{
+				System.out.println("made turn right decision");
+				visitedCells();
+				return new TurnDecision(Turn.RIGHT);
+			}
+			else
+			{
+				System.out.println("Made move forward decision");
+				visited.remove(previous);
+				visitedCells();
+				return new MoveDecision(moveForward());
+			}
+		}
+		else
+		{
+			if(direction == Direction.UP)
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+			else if(direction == Direction.DOWN)
+			{
+				System.out.println("made turn right decision");
+				visitedCells();
+				return new TurnDecision(Turn.RIGHT);
+			}
+			else if(direction == Direction.LEFT)
+			{
+				System.out.println("Made move forward decision");
+				visited.remove(previous);
+				visitedCells();
+				return new MoveDecision(moveForward());
+			}
+			else
+			{
+				System.out.println("made turn left decision");
+				visitedCells();
+				return new TurnDecision(Turn.LEFT);
+			}
+		}
+	}
+	
+	private void visitedCells()
+	{
+		for(int i = 0; i < visited.size(); i++)
+		{
+			System.out.print(visited.get(i).toString() + " ");
+		}
+		System.out.println();
 	}
 }
