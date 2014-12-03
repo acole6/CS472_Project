@@ -63,7 +63,7 @@ public class DumbHero extends AbstractHero
 		Cell cell = new Cell((int) location.getX(), (int) location.getY());
 		if(!cell.equalsIgnoreStatus(previousCell) && !foundGold && !percepts[2]) 
 		{
-			//only add a cell to visited if the hero has moved from the cell another cell
+			//only add a cell to visited if the hero has moved from the cell to another cell
 			//and this does allow duplicates
 			visited.add(cell);
 			previousCell = cell;
@@ -102,7 +102,7 @@ public class DumbHero extends AbstractHero
 				return new TurnDecision(Turn.RIGHT);
 			}
 		}
-		else if(percepts[0] || percepts[1]) //wumpus or pit deteched and no wall to block forward movement
+		else if(percepts[0] || percepts[1]) //wumpus or pit detected and no wall to block forward movement
 		{
 			//the dumb hero doesn't have any knowledge of what is to come, so
 			//moving forwarding and turning are equal options. Though if turned,
