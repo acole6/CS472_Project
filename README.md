@@ -8,6 +8,6 @@ Need to do
 - methods where Hero and GameBoard interact may need to be modified to better suit the Hero class that uses search AI
 - Add dropdown to GUI to select an AI
 - Add button on GUI to put the GUI at its initial state so that a new grid and AI can be selected
-- will add more when if I think of anything else
+- will add more when I think of something else
 
 This site is a good reference for Wumpus World info: http://www.cis.temple.edu/~giorgio/cis587/readings/wumpus.shtml
