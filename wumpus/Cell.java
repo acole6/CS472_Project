@@ -5,9 +5,7 @@ import java.util.ArrayList;
 public class Cell
 {
   private ArrayList<Cell> neighbors;
-  
   private Status status;
-  
   private Point location;
 
   public Cell(int row, int col)

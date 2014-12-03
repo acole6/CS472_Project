@@ -1,8 +1,10 @@
 package wumpus.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
+import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -18,14 +20,25 @@ import javax.swing.SwingUtilities;
 import wumpus.Direction;
 import wumpus.GameBoard;
 import wumpus.DumbHero;
-import wumpus.Hero;
 import wumpus.Status;
 
+/**
+ * This is GUI for Wumpus World. The parameter passed into
+ * start is the delay in milliseconds between when the state
+ * of the world is updated, so decrease it to make it update
+ * faster or increase it to make it update slower.
+ * 
+ * @author Alex Cole
+ *
+ */
 public class WumpusWorldUI extends JPanel
 {
+	/**
+	 * Entry point. Edit the delay here.
+	 */
 	public static void main(String[] args)
 	{ 
-	    WumpusWorldUI.start(500);
+	    WumpusWorldUI.start(1000);
 	}
 	
 	private GameBoard board;
@@ -57,6 +70,43 @@ public class WumpusWorldUI extends JPanel
 	private JLabel pitLabel;
 	private JTextArea status;
 	
+	/**
+	 * Puts a task on the Swing event queue to instantiate
+	 * all the components. 
+	 * @param sleepTime
+	 * 		the delay between world updates
+	 */
+	public static void start(final int sleepTime)
+	{
+		Runnable r = new Runnable()
+		{
+			public void run()
+			{
+				createAndShow(sleepTime);
+			}
+		};
+		SwingUtilities.invokeLater(r);
+	}
+	
+	/**
+	 * Creates the enclosing frame and starts up the UI.
+	 * @param sleepTime
+	 * 		the delay between world updates
+	 */
+	private static void createAndShow(int sleepTime)
+	{
+		JFrame frame = new JFrame("Wumpus World");
+		frame.getContentPane().add(new WumpusWorldUI(sleepTime));
+		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
+	}
+	
+	/**
+	 * Constructor sets up Swing components and initializes the world.
+	 * @param sleepTime
+	 * 		the delay between world updates
+	 */
 	private WumpusWorldUI(int sleepTime)
 	{
 		this.sleepTime = sleepTime;
@@ -182,9 +232,12 @@ public class WumpusWorldUI extends JPanel
 	    game.add(controls);
 	    game.add(panel);
 	    
-	    JPanel output = new JPanel(new FlowLayout(FlowLayout.LEFT));
+	    JPanel output = new JPanel(new BorderLayout());
 	    status = new JTextArea();
-	    output.add(status);
+	    status.setAlignmentX(TextArea.LEFT_ALIGNMENT);
+	    status.setLineWrap(true);
+	    status.setEditable(false);
+	    output.add(status, BorderLayout.CENTER);
 		output.setPreferredSize(new Dimension(this.getWidth(), 200));
 		output.setMaximumSize(boardSize.getPreferredSize());
 		
@@ -192,28 +245,12 @@ public class WumpusWorldUI extends JPanel
 	    this.add(output);
 	}
 	
-	public static void start(final int sleepTime)
-	{
-		Runnable r = new Runnable()
-		{
-			public void run()
-			{
-				createAndShow(sleepTime);
-			}
-		};
-		SwingUtilities.invokeLater(r);
-	}
-	
-	private static void createAndShow(int sleepTime)
-	{
-		JFrame frame = new JFrame("Wumpus World");
-		frame.getContentPane().add(new WumpusWorldUI(sleepTime));
-		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
-	}
-	
-	private Integer[] fillRowColumnCombobox()
+	/**
+	 * Fills the row and column comboboxes with the selectable row and column sizes
+	 * @return
+	 * 		An Integer array with the valid row and column selections
+	 */
+	protected Integer[] fillRowColumnCombobox()
 	{
 		Integer[] arr = new Integer[17];
 		for(int i = 0; i < arr.length; i++)
@@ -223,6 +260,14 @@ public class WumpusWorldUI extends JPanel
 		return arr;
 	}
 	
+	/**
+	 * Fills the wumpus location combobox with valid locations. The initial start spot
+	 * of the hero is skipped over.
+	 * @param rows
+	 * 		The number of rows in the board
+	 * @param cols
+	 * 		The number of columns in the board
+	 */
 	protected void fillWumpusCombobox(int rows, int cols)
 	{
 		wumpusCB.removeAllItems();
@@ -238,6 +283,14 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Fills the gold location combobox with valid locations. The initial start spot
+	 * of the hero and the start spot of wumpus are skipped over.
+	 * @param rows
+	 * 		The number of rows in the board
+	 * @param cols
+	 * 		The number of columns in the board
+	 */
 	protected void fillGoldCombobox(int rows, int cols)
 	{
 		goldCB.removeAllItems();
@@ -253,7 +306,16 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
-	private void fillPitCombobox(int rows, int cols)
+	/**
+	 * Fills the pit location combobox with valid locations. The initial start spot
+	 * of the hero, the start spot of the wumpus, the start spot of the gold, and any
+	 * pit already placed on the board are skipped over.
+	 * @param rows
+	 * 		The number of rows in the board
+	 * @param cols
+	 * 		The number of columns in the board.
+	 */
+	protected void fillPitCombobox(int rows, int cols)
 	{
 		pitCB.removeAllItems();
 		for(int i = 0; i < rows; i++)
@@ -268,16 +330,43 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Checks to see if the wumpus occupies the given location.
+	 * @param row
+	 * 		The row of the cell
+	 * @param col
+	 * 		The column of the cell
+	 * @return
+	 * 		True if the wumpus occupies the cell; otherwise false
+	 */
 	private boolean isWumpus(int row, int col)
 	{
 		return row == (int)wumpus.getX() && col == (int)wumpus.getY();
 	}
 	
+	/**
+	 * Checks to see if the gold occupies the given location.
+	 * @param row
+	 * 		The row of the cell
+	 * @param col
+	 * 		The column of the cell
+	 * @return
+	 * 		True if the gold occupies the cell; otherwise false
+	 */
 	private boolean isGold(int row, int col)
 	{
 		return row == (int)gold.getX() && col == (int)gold.getY();
 	}
 	
+	/**
+	 * Checks to see if a pit occupies the given location.
+	 * @param row
+	 * 		The row of the cell
+	 * @param col
+	 * 		The column of the cell
+	 * @return
+	 * 		True if a pit is in the cell; otherwise false
+	 */
 	private boolean isPit(int row, int col)
 	{
 		for(Point pit : pits)
@@ -288,6 +377,9 @@ public class WumpusWorldUI extends JPanel
 		return false;
 	}
 	
+	/**
+	 * Handler for button to confirm the board's number of rows and columns.
+	 */
 	private class gridConfirmButtonHandler implements ActionListener
 	{
 		
@@ -309,6 +401,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler for button to confirm the location of the Wumpus.
+	 */
 	private class wumpusConfirmButtonHandler implements ActionListener
 	{
 		
@@ -324,6 +419,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler for button to confirm the location of the gold.
+	 */
 	private class goldConfirmButtonHandler implements ActionListener
 	{
 		
@@ -339,6 +437,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler for button to confirm the location of a pit.
+	 */
 	private class pitConfirmButtonHandler implements ActionListener
 	{
 		
@@ -351,6 +452,8 @@ public class WumpusWorldUI extends JPanel
 				pitCB.setEnabled(false);
 				pitConfirmButton.setEnabled(false);
 				play.setEnabled(true);
+				step.setEnabled(true);
+				status.setText(board.toString());
 			}
 			else
 			{
@@ -361,7 +464,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
-	
+	/**
+	 * Handler for the play button.
+	 */
 	private class playButtonHandler implements ActionListener
 	{
 		@Override
@@ -377,9 +482,8 @@ public class WumpusWorldUI extends JPanel
 				{
 					while(!board.gameOver() && !paused)
 					{
-						Hero hero = board.getHero();
-						board.advanceBoard();
-						System.out.println("Hero location: " + (int) hero.getLocation().getX() + ", " + (int) hero.getLocation().getY());
+						String result = board.advanceBoard().toString();
+						status.setText(board.toString() + "\n" + result);
 						repaint();
 						try 
 						{
@@ -387,17 +491,23 @@ public class WumpusWorldUI extends JPanel
 						} 
 						catch(InterruptedException e1) {}
 					}
+					play.setEnabled(false);
+					step.setEnabled(false);
 				}
 			}.start();
 		}
 	}
 	
+	/**
+	 * Handler for the restart button.
+	 */
 	private class restartButtonHandler implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
 			play.setEnabled(true);
+			step.setEnabled(true);
 			restart.setEnabled(false);
 			pause.setEnabled(false);
 			board.reset();
@@ -412,6 +522,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler for the pause button.
+	 */
 	private class pauseButtonHandler implements ActionListener
 	{
 		@Override
@@ -424,21 +537,32 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler for the step button.
+	 */
 	private class stepButtonHandler implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent e)
-		{
+		{	
 			play.setEnabled(true);
 			pause.setEnabled(false);
 			restart.setEnabled(true);
-			Hero hero = board.getHero();
-			board.advanceBoard();
-			System.out.println("Hero location: " + (int) hero.getLocation().getX() + ", " + (int) hero.getLocation().getY());
+			String result = board.advanceBoard().toString();
+			status.setText(board.toString() + "\n" + result);
+
+			if(board.gameOver())
+			{
+				play.setEnabled(false);
+				step.setEnabled(false);
+			}
 			repaint();
 		}
 	}
 	
+	/**
+	 * Handler when a location is selected in the Wumpus combobox
+	 */
 	private class wumpusCBHandler implements ActionListener
 	{
 		@Override
@@ -454,6 +578,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler when a location is selected in the gold combobox
+	 */
 	private class goldCBHandler implements ActionListener
 	{
 		@Override
@@ -469,6 +596,9 @@ public class WumpusWorldUI extends JPanel
 		}
 	}
 	
+	/**
+	 * Handler when a location is selected in the pit combobox
+	 */
 	private class pitCBHandler implements ActionListener
 	{
 		@Override

@@ -14,19 +14,32 @@ import wumpus.Cell;
 import wumpus.Direction;
 import wumpus.GameBoard;
 
+/**
+ * Panel that determines how the game board for Wumpus World is displayed
+ * @author Alex Cole
+ *
+ */
 public class GameBoardPanel extends JPanel
 {
   public static final int cellSize = 100;
-  
   public static final String path = "C:/cs336/workspace/images/";
+  private GameBoard board;
   
-  protected GameBoard board;
-  
-  public GameBoardPanel(GameBoard maze)
+  /**
+   * Constructor for the GameBoardPanel.
+   * @param board
+   * 	The game board
+   */
+  public GameBoardPanel(GameBoard board)
   {
-    this.board = maze;
+    this.board = board;
   }
   
+  /**
+   * Updates the panel if a new board needs to be used.
+   * @param board
+   * 		The new game board to be used
+   */
   public void setBoard(GameBoard board)
   {
 	  this.board = board;
@@ -38,11 +51,11 @@ public class GameBoardPanel extends JPanel
   {
 	  g.clearRect(0, 0, getWidth(), getHeight());
 	    
-	    for (int row = 0; row < board.getRows(); ++row)
-	    {
-	      for (int col = 0; col < board.getColumns(); ++col)
+	  for (int row = 0; row < board.getRows(); ++row)
+	  {
+		  for (int col = 0; col < board.getColumns(); ++col)
 	      {
-	    	  int r = (int) board.getHero().getLocation().getX();
+			  int r = (int) board.getHero().getLocation().getX();
 	    	  int c = (int) board.getHero().getLocation().getY();
 	    	  BufferedImage image = null;
 	    	  try 
@@ -59,32 +72,32 @@ public class GameBoardPanel extends JPanel
 	    	  catch (IOException e) {}
 	    	  g.drawImage(image, col * cellSize, row * cellSize, cellSize, cellSize, null);
 	      }
-	    }
+	  }
 	    
-	    // draw grid
-	    g.setColor(Color.WHITE);
-	    for (int row = 0; row < board.getRows(); ++row)
-	    {
-	      for (int col = 0; col < board.getColumns(); ++col)
+	  // draw grid
+	  g.setColor(Color.WHITE);
+	  for (int row = 0; row < board.getRows(); ++row)
+	  {
+		  for (int col = 0; col < board.getColumns(); ++col)
 	      {
 	        g.drawRect(col * cellSize, row * cellSize, cellSize, cellSize);
 	      }
-	    }
-   }
+	  }
+  }
     
   private BufferedImage getImage(Cell m) throws IOException
   {
-	  if(m == null) return ImageIO.read(new File("C:/cs336/workspace/images/white.png"));
-	  switch(m.getStatus())
-	  {
-	  	case WUMPUS: return ImageIO.read(new File(path + "wumpus.png"));
+	 if(m == null) return ImageIO.read(new File(path + "white.png"));
+	 switch(m.getStatus())
+	 {
+	 	case WUMPUS: return ImageIO.read(new File(path + "wumpus.png"));
 	  	case PIT: return ImageIO.read(new File(path + "pit.png"));
 	  	case GOLD: return ImageIO.read(new File(path + "gold.png"));
 	  	case EMPTY: return ImageIO.read(new File(path + "white.png"));
 	  	case DEAD_HERO: return ImageIO.read(new File(path + "dead_hero.png"));
 	  	case DEAD_WUMPUS: return ImageIO.read(new File(path + "dead_wumpus.png"));
 	  }
-	  return ImageIO.read(new File("C:/cs336/workspace/images/white.png"));
+	  return ImageIO.read(new File(path + "white.png"));
   }
   
   private BufferedImage getHeroImage(Direction direction) throws IOException

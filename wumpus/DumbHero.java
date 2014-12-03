@@ -4,12 +4,23 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * Very basic hero agent that makes decision mostly on precepts and only
+ * remembers if he has previous turned and the cells he has visited so
+ * that he can retrace his steps to get out of the cave
+ * @author Alex Cole
+ *
+ */
 public class DumbHero extends AbstractHero
 {
 	private ArrayList<Cell> visited;
 	private boolean turned;
 	private Cell previousCell;
 	
+	/**
+	 * Constructs a DumbHero agent
+	 * @param direction
+	 */
 	public DumbHero(Direction direction)
 	{
 		super(direction);
@@ -18,6 +29,10 @@ public class DumbHero extends AbstractHero
 		previousCell = null;
 	}
 	
+	/**
+	 * Sets the hero back to his initial state
+	 * including clearing his knowledge of cells visited
+	 */
 	@Override
 	public void reset()
 	{
@@ -26,101 +41,105 @@ public class DumbHero extends AbstractHero
 		visited.clear();
 	}
 	
+	/**
+	 * Updates that the hero has been killed but does not store
+	 * the information on what killed the hero.
+	 */
+	@Override
+	public void killed(int row, int col, Status causeOfDeath) 
+	{
+		alive = false;
+	}
+	
+	/**
+	 * DumbHero makes decision based on percepts passed in, if the hero has found gold
+	 * or not, if the hero has turned, and visited cells (if gold found).
+	 * @param percepts
+	 * 		The percepts for the hero to consider when making a decision
+	 */
 	@Override
 	public Decision makeDecision(boolean[] percepts)
 	{
 		Cell cell = new Cell((int) location.getX(), (int) location.getY());
-		if(percepts[2])
-		{
-			cell.setStatus(Status.GOLD);
-		}
-		else
-		{
-			cell.setStatus(Status.EMPTY);
-		}
 		if(!cell.equalsIgnoreStatus(previousCell) && !foundGold && !percepts[2]) 
 		{
+			//only add a cell to visited if the hero has moved from the cell another cell
+			//and this does allow duplicates
 			visited.add(cell);
 			previousCell = cell;
 		}
 		
-		if(foundGold)
+		if(foundGold) //found gold so grab it or if already grabbed it, head for the exit
 		{
 			if(location.getX() == 0 && location.getY() == 0) 
 			{
-				System.out.println("Made climb decision");
-				visitedCells();
 				return new ClimbDecision(true);
 			}
 			else
 			{
-				visitedCells();
 				return retraceSteps();
 			}
 		}
 		
 		if(percepts[2]) //glitter, means gold
 		{
-			System.out.println("Made grab decision");
-			visitedCells();
 			return new GrabDecision(true);
 		}
 	
 		if(percepts[3]) //bump, means wall is directly forward
 		{
+			//if bump pick turn direction randomly
 			Random rand = new Random();
 			int move = rand.nextInt(2);
 			if(move == 0)
 			{
-				System.out.println("Made turn left decision");
 				turned = true;
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else
 			{
-				System.out.println("Made turn right decision");
 				turned = true;
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 		}
 		else if(percepts[0] || percepts[1]) //wumpus or pit deteched and no wall to block forward movement
 		{
+			//the dumb hero doesn't have any knowledge of what is to come, so
+			//moving forwarding and turning are equal options. Though if turned,
+			//it is assumed that the hero turned to move forward in that direction
+			//and is not trying to retreat by turning again to go backwards.
 			Random rand = new Random();
 			int move = rand.nextInt(3);
 			if(move == 0 && !turned)
 			{
-				System.out.println("Made turn left decision");
 				turned = true;
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(move == 1 && !turned)
 			{
-				System.out.println("Made turn right decision");
 				turned = true;
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else
 			{
-				System.out.println("Made move forward decision");
 				turned = false;
-				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 		}
 		else
 		{
-			System.out.println("Made move forward decision");
+			//if nothing is detected, then move forward
 			turned = false;
-			visitedCells();
 			return new MoveDecision(moveForward());
 		}
 	}
 	
-	
+	/**
+	 * Determines what cell to move to based on what direction
+	 * the hero is facing.
+	 * @return
+	 * 		The point for the hero to move forward to
+	 */
 	private Point moveForward()
 	{
 		int row = (int) location.getX();
@@ -143,6 +162,13 @@ public class DumbHero extends AbstractHero
 		}
 	}
 	
+	/**
+	 * The hero retraces the visited cells. If the current cell is
+	 * not directly in from of the hero, the hero turns to attemp to face
+	 * the cell.
+	 * @return
+	 * 		The decision made when trying retrace the visited cells (turn or move forward decision)
+	 */
 	private Decision retraceSteps()
 	{
 		if(visited.isEmpty()) return new ClimbDecision(true);
@@ -160,27 +186,19 @@ public class DumbHero extends AbstractHero
 		{
 			if(direction == Direction.UP)
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(direction == Direction.DOWN)
 			{
-				System.out.println("Made move forward decision");
 				visited.remove(previous);
-				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 			else if(direction == Direction.LEFT)
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else
 			{
-				System.out.println("made turn right decision");
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 		}
@@ -188,26 +206,19 @@ public class DumbHero extends AbstractHero
 		{
 			if(direction == Direction.UP)
 			{
-				System.out.println("Made move forward decision");
 				visited.remove(previous);
-				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 			else if(direction == Direction.DOWN)
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(direction == Direction.LEFT)
 			{
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 		}
@@ -215,27 +226,20 @@ public class DumbHero extends AbstractHero
 		{
 			if(direction == Direction.UP)
 			{
-				System.out.println("made turn right decision");
-				visitedCells();
+			
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else if(direction == Direction.DOWN)
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(direction == Direction.LEFT)
 			{
-				System.out.println("made turn right decision");
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else
 			{
-				System.out.println("Made move forward decision");
 				visited.remove(previous);
-				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 		}
@@ -243,38 +247,21 @@ public class DumbHero extends AbstractHero
 		{
 			if(direction == Direction.UP)
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 			else if(direction == Direction.DOWN)
 			{
-				System.out.println("made turn right decision");
-				visitedCells();
 				return new TurnDecision(Turn.RIGHT);
 			}
 			else if(direction == Direction.LEFT)
 			{
-				System.out.println("Made move forward decision");
 				visited.remove(previous);
-				visitedCells();
 				return new MoveDecision(moveForward());
 			}
 			else
 			{
-				System.out.println("made turn left decision");
-				visitedCells();
 				return new TurnDecision(Turn.LEFT);
 			}
 		}
-	}
-	
-	private void visitedCells()
-	{
-		for(int i = 0; i < visited.size(); i++)
-		{
-			System.out.print(visited.get(i).toString() + " ");
-		}
-		System.out.println();
 	}
 }
