@@ -7,6 +7,8 @@ import java.awt.Point;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -19,7 +21,7 @@ import javax.swing.SwingUtilities;
 
 import wumpus.Direction;
 import wumpus.GameBoard;
-import wumpus.DumbHero;
+import wumpus.DepthSearchHero;
 import wumpus.Status;
 
 /**
@@ -44,12 +46,16 @@ public class WumpusWorldUI extends JPanel
 	private GameBoard board;
 	private GameBoardPanel panel;
 	
+	private DepthSearchHero hero;
+	private List<DepthSearchHero.GamePath> gamePaths;
+	private int gamePathIndex = 0;
+	private int moveIndex = 0;
+	
 	private Point wumpus;
 	private Point gold;
 	private Point[] pits;
 	private int pitsFilled;
 	private int sleepTime;
-	private boolean paused = false;
 	
 	private JButton gridConfirmButton;
 	private JButton wumpusConfirmButton;
@@ -65,7 +71,6 @@ public class WumpusWorldUI extends JPanel
 	private JButton play;
 	private JButton restart;
 	private JButton step;
-	private JButton pause;
 	
 	private JLabel pitLabel;
 	private JTextArea status;
@@ -110,7 +115,9 @@ public class WumpusWorldUI extends JPanel
 	private WumpusWorldUI(int sleepTime)
 	{
 		this.sleepTime = sleepTime;
-		this.board = new GameBoard(4, 4, new DumbHero(Direction.DOWN));
+		this.board = new GameBoard(4, 4);
+		hero = null;
+		gamePaths = new ArrayList<DepthSearchHero.GamePath>();
 		
 		wumpus = new Point(0, 1);
 		gold = new Point(0, 2);
@@ -204,11 +211,6 @@ public class WumpusWorldUI extends JPanel
 		startButtons.add(step);
 		step.setEnabled(false);
 		step.addActionListener(new stepButtonHandler());
-		
-		pause = new JButton("Pause");
-		startButtons.add(pause);
-		pause.setEnabled(false);
-		pause.addActionListener(new pauseButtonHandler());
 		
 		restart = new JButton("Restart");
 		startButtons.add(restart);
@@ -389,7 +391,7 @@ public class WumpusWorldUI extends JPanel
 			int rows = (int) rowCB.getSelectedItem();
 			int cols = (int) columnCB.getSelectedItem();
 			pits = new Point[cols - 1];
-			board = new GameBoard(rows, cols, new DumbHero(Direction.DOWN));
+			board = new GameBoard(rows, cols);
 			panel.setBoard(board);
 			fillWumpusCombobox(rows, cols);
 			wumpusCB.setEnabled(true);
@@ -454,6 +456,9 @@ public class WumpusWorldUI extends JPanel
 				play.setEnabled(true);
 				step.setEnabled(true);
 				status.setText(board.toString());
+				hero = new DepthSearchHero(board);
+				hero.solve();
+				gamePaths = hero.getPaths();
 			}
 			else
 			{
@@ -473,17 +478,22 @@ public class WumpusWorldUI extends JPanel
 		public void actionPerformed(ActionEvent e)
 		{
 			play.setEnabled(false);
+			step.setEnabled(false);
 			restart.setEnabled(true);
-			pause.setEnabled(true);
-			paused = false;
 			new Thread()
 			{
 				public void run()
 				{
-					while(!board.gameOver() && !paused)
+					DepthSearchHero.GamePath path = gamePaths.get(gamePathIndex);
+					while(!board.gameOver())
 					{
-						String result = board.advanceBoard().toString();
+						String result = board.advanceBoard(path.getDecisions().get(moveIndex)).toString();
 						status.setText(board.toString() + "\n" + result);
+						moveIndex++;
+						if(moveIndex > path.getDecisions().size() - 1)
+						{
+							break;
+						}
 						repaint();
 						try 
 						{
@@ -491,6 +501,12 @@ public class WumpusWorldUI extends JPanel
 						} 
 						catch(InterruptedException e1) {}
 					}
+					gamePathIndex++;
+					if(gamePathIndex > gamePaths.size() - 1) 
+					{
+						gamePathIndex = gamePaths.size() - 1;
+					}
+					moveIndex = 0;
 					play.setEnabled(false);
 					step.setEnabled(false);
 				}
@@ -509,7 +525,6 @@ public class WumpusWorldUI extends JPanel
 			play.setEnabled(true);
 			step.setEnabled(true);
 			restart.setEnabled(false);
-			pause.setEnabled(false);
 			board.reset();
 			board.getCell((int) wumpus.getX(), (int) wumpus.getY()).setStatus(Status.WUMPUS);
 			board.getCell((int) gold.getX(), (int) gold.getY()).setStatus(Status.GOLD);
@@ -523,21 +538,6 @@ public class WumpusWorldUI extends JPanel
 	}
 	
 	/**
-	 * Handler for the pause button.
-	 */
-	private class pauseButtonHandler implements ActionListener
-	{
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			paused = true;
-			play.setEnabled(true);
-			step.setEnabled(true);
-			restart.setEnabled(true);
-		}
-	}
-	
-	/**
 	 * Handler for the step button.
 	 */
 	private class stepButtonHandler implements ActionListener
@@ -546,13 +546,20 @@ public class WumpusWorldUI extends JPanel
 		public void actionPerformed(ActionEvent e)
 		{	
 			play.setEnabled(true);
-			pause.setEnabled(false);
 			restart.setEnabled(true);
-			String result = board.advanceBoard().toString();
+			DepthSearchHero.GamePath path = gamePaths.get(gamePathIndex);
+			String result = board.advanceBoard(path.getDecisions().get(moveIndex)).toString();
 			status.setText(board.toString() + "\n" + result);
+			moveIndex++;
 
 			if(board.gameOver())
 			{
+				gamePathIndex++;
+				if(gamePathIndex > gamePaths.size() - 1)
+				{
+					gamePathIndex = gamePaths.size() - 1;
+				}
+				moveIndex = 0;
 				play.setEnabled(false);
 				step.setEnabled(false);
 			}

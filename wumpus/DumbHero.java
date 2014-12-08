@@ -46,7 +46,7 @@ public class DumbHero extends AbstractHero
 	 * the information on what killed the hero.
 	 */
 	@Override
-	public void killed(int row, int col, Status causeOfDeath) 
+	public void killed(Status causeOfDeath) 
 	{
 		alive = false;
 	}
@@ -63,7 +63,7 @@ public class DumbHero extends AbstractHero
 		Cell cell = new Cell((int) location.getX(), (int) location.getY());
 		if(!cell.equalsIgnoreStatus(previousCell) && !foundGold && !percepts[2]) 
 		{
-			//only add a cell to visited if the hero has moved from the cell to another cell
+			//only add a cell to visited if the hero has moved from the cell another cell
 			//and this does allow duplicates
 			visited.add(cell);
 			previousCell = cell;
@@ -102,7 +102,7 @@ public class DumbHero extends AbstractHero
 				return new TurnDecision(Turn.RIGHT);
 			}
 		}
-		else if(percepts[0] || percepts[1]) //wumpus or pit detected and no wall to block forward movement
+		else if(percepts[0] || percepts[1]) //wumpus or pit deteched and no wall to block forward movement
 		{
 			//the dumb hero doesn't have any knowledge of what is to come, so
 			//moving forwarding and turning are equal options. Though if turned,
@@ -131,34 +131,6 @@ public class DumbHero extends AbstractHero
 			//if nothing is detected, then move forward
 			turned = false;
 			return new MoveDecision(moveForward());
-		}
-	}
-	
-	/**
-	 * Determines what cell to move to based on what direction
-	 * the hero is facing.
-	 * @return
-	 * 		The point for the hero to move forward to
-	 */
-	private Point moveForward()
-	{
-		int row = (int) location.getX();
-		int col = (int) location.getY();
-		if(direction == Direction.UP)
-		{
-			return new Point(row - 1, col);
-		}
-		else if(direction == Direction.DOWN)
-		{
-			return new Point(row + 1, col);
-		}
-		else if(direction == Direction.LEFT)
-		{
-			return new Point(row, col - 1);
-		}
-		else
-		{
-			return new Point(row, col + 1);
 		}
 	}
 	

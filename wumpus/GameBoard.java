@@ -8,14 +8,16 @@ public class GameBoard
   
   private Cell[][] cells;
   private Cell start;
-  private Hero hero;
   private boolean gameOver;
   private boolean[] percepts;
+  private Point heroLocation;
+  private Direction heroDirection;
   
-  public GameBoard(int rows, int columns, DumbHero hero)
+  public GameBoard(int rows, int columns)
   {
-	  this.hero = hero;
 	  percepts = new boolean[5];
+	  heroLocation = new Point(0, 0);
+	  heroDirection = Direction.DOWN;
 	  
 	  cells = new Cell[rows][columns];
 	  for (int row = 0; row < rows; ++row)
@@ -58,10 +60,8 @@ public class GameBoard
 	  }
    }
   
-  public boolean[] getPercepts()
+  public boolean[] getPercepts(int row, int col)
   {
-	  int row = (int) hero.getLocation().getX();
-	  int col = (int) hero.getLocation().getY();
 	  Cell cell = cells[row][col];
 	  
 	  ArrayList<Cell> neighbors = cell.getNeighors();
@@ -92,13 +92,10 @@ public class GameBoard
 	  return gameOver;
   }
   
-  public Hero getHero()
-  {
-	  return hero;
-  }
-  
   public void reset()
   {
+	  heroLocation = new Point(0, 0);
+	  heroDirection = Direction.DOWN;
 	  for(int i = 0; i < getRows(); i++)
 	  {
 		  for(int j = 0; j < getColumns(); j++)
@@ -107,47 +104,44 @@ public class GameBoard
 		  }
 	  }
 	  gameOver = false;
-	  hero.reset();
-	  hero.foundGold(false);
-	  hero.setLocation(0, 0);
-	  hero.setDirection(Direction.DOWN);
 	  for(int i = 0; i < percepts.length; i++)
 	  {
 		  percepts[i] = false;
 	  }
   }
   
-  public void updateHero(int r, int c)
+  public Point getHeroLocation()
   {
-	  hero.setLocation(r, c);
+	  return heroLocation;
   }
   
-  public Result advanceBoard()
+  public Direction getHeroDirection()
   {
-	  Decision decision = hero.makeDecision(getPercepts());
-	  if(decision instanceof GrabDecision)
-	  {
-		  if((boolean) decision.getDecision())
+	  return heroDirection;
+  }
+  
+  public Result advanceBoard(Decision decision)
+  {
+	  if(decision == Decision.GRAB)
+	  {  
+		  int r = heroLocation.x;
+		  int c = heroLocation.y;
+		  if(cells[r][c].getStatus() == Status.GOLD)
 		  {
-			  int r = (int) hero.getLocation().getX();
-			  int c = (int) hero.getLocation().getY();
-			  if(cells[r][c].getStatus() == Status.GOLD)
-			  {
-				  hero.foundGold(true);
-				  cells[r][c].setStatus(Status.EMPTY);
-				  return new Result("Grab decision", true, "The hero grabbed the gold.");
-			  }
-			  else
-			  {
-				  return new Result("Grab decision", false, "The hero attempted to grab the gold, but there was no gold to be found");
-			  }
+			  cells[r][c].setStatus(Status.EMPTY);
+			  return new Result("Grab decision", true, "The hero grabbed the gold.");
+		  }
+		  else
+		  {
+			  return new Result("Grab decision", false, "The hero attempted to grab the gold, but there was no gold to be found");
 		  }  
 	  }
-	  else if(decision instanceof MoveDecision)
-	  {
-		  Point point = (Point) decision.getDecision();
-		  int r = (int) point.getX();
-		  int c = (int) point.getY();
+	  else if(decision == Decision.FORWARD)
+	  {  
+		  Point dest = moveForward();
+		  int r = dest.x;
+		  int c = dest.y;
+		  System.out.println("trying to go here: " + r + "," + c);
 		  if(r < 0 || r > cells.length - 1 || c < 0 || c > cells[0].length - 1)
 		  {
 			  percepts[3] = true;
@@ -166,94 +160,110 @@ public class GameBoard
 				  {
 					  result = new Result("Move decision", false, "The hero met his grisly end by the hands of the Wumpus");
 				  }
-				  hero.setLocation(-1, -1);
+				  heroLocation.setLocation(-1, -1);
 				  cells[r][c].setStatus(Status.DEAD_HERO);
 				  gameOver = true;
 				  return result;
 			  }
 			  else
 			  {
-				  updateHero(r, c);
+				  heroLocation.setLocation(r, c);
 				  percepts[3] = false;
 				  return new Result("Move decision", true, "The hero explored even deeper into the cave.");
 			  }
 		  }
 	  }
-	  else if(decision instanceof TurnDecision)
+	  else if(decision == Decision.TURN_LEFT)
 	  {
-		  Turn turn = (Turn) decision.getDecision();
-		  updateHeroDirection(turn);
-		  updateHero((int) hero.getLocation().getX(), (int) hero.getLocation().getY());
+		  updateHeroDirection(decision);
 		  percepts[3] = false;
-		  if(turn == Turn.LEFT)
+		  return new Result("Turn decision", true, "The hero decided that the left path was the better option");
+	  }
+  	  else if(decision == Decision.TURN_RIGHT)
+  	  {
+  		  updateHeroDirection(decision);
+  		  percepts[3] = false;
+  		  return new Result("Turn decision", true, "The hero decided that the right path was the better option");
+  	  }
+	  else if(decision == Decision.CLIMB)
+	  {
+		  if(heroLocation.x == 0 && heroLocation.y == 0)
 		  {
-			  return new Result("Turn decision", true, "The hero decided that the left path was the better option");
+			  gameOver = true;
+			  return new Result("Climb decision", true, "The hero has escaped the cave with the gold. He will no doubt spend the gold wisely.");
 		  }
 		  else
 		  {
-			  return new Result("Turn decision", true, "The hero decided that the right path was the better option");
-		  }
-	  }
-	  else if(decision instanceof ClimbDecision)
-	  {
-		  if((boolean) decision.getDecision())
-		  {
-			  if(hero.getLocation().getX() == 0 && hero.getLocation().getY() == 0)
-			  {
-				  gameOver = true;
-				  return new Result("Climb decision", true, "The hero has escaped the cave with the gold. He will no doubt spend the gold wisely.");
-			  }
-			  else
-			  {
-				  return new Result("Climb decision", false, "The hero must be confused. There is no hole to climb out of here.");
-			  }
+			  return new Result("Climb decision", false, "The hero must be confused. There is no hole to climb out of here.");
 		  }
 	  }
 	  return null;
   }
   
-  private void updateHeroDirection(Turn turn)
+  private void updateHeroDirection(Decision turn)
   {
-	  Direction direction = hero.getDirection();
-	  if(turn == Turn.LEFT)
+	  if(turn == Decision.TURN_LEFT)
 	  {
-		  if(direction == Direction.UP)
+		  if(heroDirection == Direction.UP)
 		  {
-			  hero.setDirection(Direction.LEFT);
+			  heroDirection = Direction.LEFT;
 		  }
-		  else if(direction == Direction.DOWN)
+		  else if(heroDirection == Direction.DOWN)
 		  {
-			  hero.setDirection(Direction.RIGHT);
+			  heroDirection = Direction.RIGHT;
 		  }
-		  else if(direction == Direction.LEFT)
+		  else if(heroDirection == Direction.LEFT)
 		  {
-			  hero.setDirection(Direction.DOWN);
+			  heroDirection = Direction.DOWN;
 		  }
 		  else
 		  {
-			  hero.setDirection(Direction.UP);
+			  heroDirection = Direction.UP;
 		  }
 	  }
 	  else
 	  {
-		  if(direction == Direction.UP)
+		  if(heroDirection == Direction.UP)
 		  {
-			  hero.setDirection(Direction.RIGHT);
+			  heroDirection = Direction.RIGHT;
 		  }
-		  else if(direction == Direction.DOWN)
+		  else if(heroDirection == Direction.DOWN)
 		  {
-			  hero.setDirection(Direction.LEFT);
+			  heroDirection = Direction.LEFT;
 		  }
-		  else if(direction == Direction.LEFT)
+		  else if(heroDirection == Direction.LEFT)
 		  {
-			  hero.setDirection(Direction.UP);
+			  heroDirection = Direction.UP;
 		  }
 		  else
 		  {
-			  hero.setDirection(Direction.DOWN);
+			  heroDirection = Direction.DOWN;
 		  }
 	  }
   }
+  
+  private Point moveForward()
+	{
+		int row = heroLocation.x;
+		int col = heroLocation.y;
+		
+		if(heroDirection == Direction.UP)
+		{
+			return new Point(row - 1, col);
+		}
+		else if(heroDirection == Direction.DOWN)
+		{
+			return new Point(row + 1, col);
+		}
+		else if(heroDirection == Direction.LEFT)
+		{
+			return new Point(row, col - 1);
+		}
+		else
+		{
+			return new Point(row, col + 1);
+		}
+	}
   
   public void setCellStatus(int row, int col, Status status)
   {
@@ -280,6 +290,14 @@ public class GameBoard
   {
     return start;
   }
+  
+  public boolean isAccessible(Point point)
+  {
+	  int row = getRows();
+	  int col = getColumns();
+	  
+	  return !(point.x < 0) && !(point.x > (row - 1)) && !(point.y < 0) && !(point.y > (col - 1));
+  }
 
   private boolean isAccessible(Cell cell)
   {
@@ -292,35 +310,35 @@ public class GameBoard
 	  StringBuilder sb = new StringBuilder();
 	  if(!gameOver())
 	  {
-		  sb.append("Hero location: (" + hero.getLocation().x + ", " + hero.getLocation().y + ")\n");
-		  sb.append("Percepts: ");
-		  getPercepts();
-		  if(percepts[0])
-		  {
-			  sb.append("Stench ");
-		  }
-		  if(percepts[1])
-		  {
-			  sb.append("Breeze ");
-		  }
-		  if(percepts[2])
-		  {
-			  sb.append("Glitter ");
-		  }
-		  if(percepts[3])
-		  {
-			  sb.append("Bump ");
-		  }
-		  if(percepts[4])
-		  {
-			  sb.append("Scream ");
-		  }
-	  }
-	  else
-	  {
-		  sb.append("The game is over");
-	  }
-	  return sb.toString();
+		 sb.append("Hero location: (" + heroLocation.x + ", " + heroLocation.y + ")\n");
+		 sb.append("Percepts: ");
+		 getPercepts(heroLocation.x, heroLocation.y);
+		 if(percepts[0])
+		 {
+			 sb.append("Stench ");
+		 }
+		 if(percepts[1])
+		 {
+			 sb.append("Breeze ");
+		 }
+		 if(percepts[2])
+		 {
+			 sb.append("Glitter ");
+		 }
+		 if(percepts[3])
+		 {
+			 sb.append("Bump ");
+		 }
+		 if(percepts[4])
+		 {
+			 sb.append("Scream ");
+		 }
+	 }
+	 else
+	 {
+		 sb.append("The game is over");
+	 }
+	 return sb.toString();
   }
   
   public class Result

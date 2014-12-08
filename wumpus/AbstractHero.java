@@ -1,135 +1,188 @@
 package wumpus;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Abstract hero agent
  * @author Alex
  *
  */
-public abstract class AbstractHero implements Hero
+public abstract class AbstractHero
 {
-	protected Direction direction;
-	protected Point location;
-	protected boolean foundGold;
-	protected boolean alive;
+	protected GameBoard board;
+	protected LinkedList<SearchNode> open;
+	protected HashSet<String> exploring;
+	protected HashSet<String> pit;
+	protected HashSet<String> wall;
+	protected String wumpus;
+	protected Point start;
+	protected boolean ranIntoWall = false;
+	protected List<GamePath> paths;
 	
-	/**
-	 * Abstract hero constructor
-	 * @param direction
-	 */
-	protected AbstractHero(Direction direction)
+	protected AbstractHero(GameBoard board)
 	{
-		this.direction = direction;
-		location = new Point(0, 0);
-		foundGold = false;
-		alive = true;
-	}
-	
-	/**
-	 * Gets the direction the hero is facing (up, down, left, right).
-	 * @return
-	 * 		The direction the hero is facing
-	 */
-	@Override
-	public Direction getDirection() 
-	{
-		return direction;
-	}
-
-	/**
-	 * Sets the direction the hero is facing.
-	 * @param direction
-	 * 		The direction the hero should face.
-	 */
-	@Override
-	public void setDirection(Direction direction) 
-	{
-		this.direction = direction;
-	}
-
-	/**
-	 * Gets the location of the hero on the board.
-	 * @return
-	 * 		The location of the hero
-	 */
-	@Override
-	public Point getLocation() 
-	{
-		return location;
-	}
-
-	/**
-	 * Sets the location of the hero on the board.
-	 * @param row
-	 * 		The row on the board
-	 * @param col
-	 * 		The Column on the board
-	 */
-	@Override
-	public void setLocation(int row, int col) 
-	{
-		location = new Point(row, col);
-	}
-
-	/**
-	 * Checks if the hero is carrying gold.
-	 * @return
-	 * 		True if the hero has gold; otherwise false
-	 */
-	@Override
-	public boolean hasGold() 
-	{
-		return foundGold;
-	}
-
-	/**
-	 * Updates if the hero has found gold or not.
-	 * @param found
-	 * 		True if the hero has found gold and false if the hero has not
-	 */
-	@Override
-	public void foundGold(boolean found) 
-	{
-		foundGold = found;
+		this.board = board;
+		start = new Point(0, 0);
+		open = new LinkedList<SearchNode>();
+		exploring = new HashSet<String>();
+		pit = new HashSet<String>();
+		wall = new HashSet<String>();
+		paths = new ArrayList<GamePath>();
 	}
 	
-	/**
-	 * Checks to see if the hero is alive
-	 * @return
-	 * 		True if alive; otherwise false
-	 */
-	@Override
-	public boolean isAlive()
+	public List<GamePath> getPaths()
 	{
-		return alive;
+		return paths;
 	}
 	
-	/**
-	 * The hero makes a decision about what to do based on the hero's location on
-	 * the board and the percepts passed in. The hero can decide to move forward, turn left
-	 * or right, climb out of the cave or grab gold.
-	 * @param percepts
-	 * 		The percepts that the hero agent considers when making a decision
-	 * @return
-	 * 		The decision made by the hero
-	 */
-	public abstract Decision makeDecision(boolean[] perceptes);
+	public abstract void solve();
 	
-	/**
-	 * Resets the hero back to his initial state
-	 */
-	public abstract void reset();
+	protected abstract SearchNode pop(LinkedList<SearchNode> list);
 	
-	/**
-	 * Marks that the hero was killed in the cave and passes in the location
-	 * the hero was killed and what killed the hero (Wumpus or pit).
-	 * @param row
-	 * 		The row 
-	 * @param col
-	 * 		The column
-	 * @param causeOfDeath
-	 * 		What killed the hero (Wumpus or pit)
-	 */
-	public abstract void killed(int row, int col, Status causeOfDeath);
+	protected boolean canAdd(String node)
+	{
+		if(!alreadyInOpen(node) 
+				&& !wall.contains(node)
+				&& !pit.contains(node)
+				&& !node.equals(wumpus)
+				&& !exploring.contains(node))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean alreadyInOpen(String nodeContents)
+	{
+		for(int i = 0; i < open.size(); i++)
+		{
+			SearchNode node = open.get(i);
+			String oldNodeContents = node.toString();
+			if(nodeContents.equalsIgnoreCase(oldNodeContents)) return true;
+		}
+		return false;
+	}
+	
+	public class SearchNode
+	{
+		final SearchNode parent;
+		final Point location;
+		final Direction initial;
+		List<Decision> initialDecisions;
+		Direction direction;
+		List<Decision> decisions;
+		
+		public SearchNode(Point location, SearchNode parent)
+		{
+			this.location = location;
+			this.parent = parent;
+			direction = Direction.DOWN;
+			initial = direction;
+			this.decisions = new ArrayList<Decision>();
+			initialDecisions = new ArrayList<Decision>();
+		}
+		
+		public SearchNode(Point location, SearchNode parent, Direction direction)
+		{
+			this.location = location;
+			this.parent = parent;
+			this.direction = direction;
+			initial = this.direction;
+			this.decisions = new ArrayList<Decision>();
+			initialDecisions = new ArrayList<Decision>();
+		}
+		
+		public List<Point> getPath()
+		{
+			List<Point> ret = new ArrayList<Point>();
+			ret.add(location);
+			SearchNode temp = parent;
+			while(temp != null)
+			{
+				ret.add(0, temp.getLocation());
+				temp = temp.getParent();
+			}
+			return ret;
+		}
+		
+		public Point getLocation()
+		{
+			return location;
+		}
+		
+		public SearchNode getParent()
+		{
+			return parent;
+		}
+		
+		public void setDirection(Direction direction)
+		{
+			this.direction = direction;
+		}
+		
+		public void setDecisions(List<Decision> decisions)
+		{
+			this.decisions = decisions;
+		}
+		
+		public Direction getDirection()
+		{
+			return direction;
+		}
+		
+		public List<Decision> getDecisions()
+		{
+			return decisions;
+		}
+		
+		public boolean addToDecisions(List<Decision> toAdd)
+		{
+			return decisions.addAll(toAdd);
+		}
+		
+		public void setInitialDecisions(List<Decision> initialDecisions)
+		{
+			this.initialDecisions.clear();
+			this.initialDecisions.addAll(initialDecisions);
+		}
+		
+		public void setToInitial()
+		{
+			direction = initial;
+			decisions.clear();
+			decisions.addAll(initialDecisions);
+		}
+		
+		@Override
+		public String toString()
+		{
+			return "(" + location.x + "," + location.y + ")";
+		}
+	}
+	
+	public class GamePath
+	{
+		List<Point> path;
+		List<Decision> decisions;
+		
+		public GamePath(List<Point> path, List<Decision> decisions)
+		{
+			this.path = path;
+			this.decisions = decisions;
+		}
+		
+		public List<Point> getPath()
+		{
+			return path;
+		}
+		
+		public List<Decision> getDecisions()
+		{
+			return decisions;
+		}
+	}
 }

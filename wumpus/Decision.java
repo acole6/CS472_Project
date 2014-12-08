@@ -1,6 +1,3 @@
 package wumpus;
 
-public interface Decision 
-{
-	Object getDecision();
-}
+public enum Decision {FORWARD, TURN_LEFT, TURN_RIGHT, CLIMB, GRAB, SHOOT }

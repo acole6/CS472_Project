@@ -55,14 +55,14 @@ public class GameBoardPanel extends JPanel
 	  {
 		  for (int col = 0; col < board.getColumns(); ++col)
 	      {
-			  int r = (int) board.getHero().getLocation().getX();
-	    	  int c = (int) board.getHero().getLocation().getY();
+			  int r = board.getHeroLocation().getLocation().x;
+	    	  int c = board.getHeroLocation().getLocation().y;
 	    	  BufferedImage image = null;
 	    	  try 
 	    	  {
 	    		  if(r == row && c == col)
 	    		  {
-	    			  image = getHeroImage(board.getHero().getDirection());
+	    			  image = getHeroImage(board.getHeroDirection());
 	    		  }
 	    		  else
 	    		  {
