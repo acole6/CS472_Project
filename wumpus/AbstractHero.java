@@ -20,8 +20,7 @@ public abstract class AbstractHero
 	protected HashSet<String> wall;
 	protected String wumpus;
 	protected Point start;
-	protected boolean ranIntoWall = false;
-	protected List<GamePath> paths;
+	protected List<List<Point>> paths;
 	protected SearchNode currentNode;
 	
 	protected AbstractHero(GameBoard board)
@@ -32,17 +31,130 @@ public abstract class AbstractHero
 		exploring = new HashSet<String>();
 		pit = new HashSet<String>();
 		wall = new HashSet<String>();
-		paths = new ArrayList<GamePath>();
+		paths = new ArrayList<List<Point>>();
 	}
 	
-	public List<GamePath> getPaths()
+	public List<List<Point>> getPaths()
 	{
 		return paths;
 	}
 	
-	public abstract void solve();
+	public void solve()
+	{
+		open.add(new SearchNode(start, null));
+		SearchNode currentNode = null;
+		List<Point> explore = new ArrayList<Point>();
+		while(!open.isEmpty())
+		{
+			currentNode = pop(open);
+			if(board.isAccessible(currentNode.getLocation()))
+			{
+				Status status = board.getCell(currentNode.getLocation().x, currentNode.getLocation().y).getStatus();
+				if(status == Status.GOLD)
+				{
+					explore = currentNode.getParent().getPath();
+					break;
+				}
+				else if(status == Status.PIT)
+				{
+					pit.add(currentNode.toString());
+					paths.add(currentNode.getPath());
+				}
+				else if(status == Status.WUMPUS)
+				{
+					wumpus = currentNode.toString();
+					paths.add(currentNode.getPath());
+				}
+				else
+				{
+					exploring.add(currentNode.toString());
+					addNewChildrenToOpen(currentNode);
+				}
+			}
+			else
+			{
+				wall.add(currentNode.toString());
+			}
+		}
+		
+		open.clear();
+		exploring.clear();
+		open.add(new SearchNode(currentNode.getLocation(), null));
+		while(!open.isEmpty())
+		{
+			List<Point> exit = new ArrayList<Point>();
+			currentNode = pop(open);
+			if(board.isAccessible(currentNode.getLocation()))
+			{
+				Status status = board.getCell(currentNode.getLocation().x, currentNode.getLocation().y).getStatus();
+				if(currentNode.getLocation().equals(start))
+				{	
+					exit.addAll(explore);
+					exit.addAll(currentNode.getPath());
+					paths.add(exit);
+					break;
+				}
+				else if(status == Status.WUMPUS)
+				{
+					wumpus = currentNode.toString();
+					exit.addAll(explore);
+					exit.addAll(currentNode.getPath());
+					paths.add(exit);
+				}
+				else if(status == Status.PIT)
+				{
+					pit.add(currentNode.toString());
+					exit.addAll(explore);
+					exit.addAll(currentNode.getPath());
+					paths.add(exit);
+				}
+				else
+				{
+					exploring.add(currentNode.toString());
+					addNewChildrenToOpen(currentNode);
+				}
+			}
+			else
+			{
+				wall.add(currentNode.toString());
+			}
+		}
+	}
 	
 	protected abstract SearchNode pop(LinkedList<SearchNode> list);
+	
+	protected void addNewChildrenToOpen(SearchNode parent)
+	{
+		Point location = parent.getLocation();
+		SearchNode node = createSearchNode(location.x, location.y - 1, parent);
+		if(canAdd(node.toString()))
+		{
+			open.add(node);
+		}
+		
+		node = createSearchNode(location.x + 1, location.y, parent);
+		if(canAdd(node.toString()))
+		{	
+			open.add(node);
+		}
+		
+		node = createSearchNode(location.x, location.y + 1, parent);
+		if(canAdd(node.toString()))
+		{
+			open.add(node);
+		}
+		
+		node = createSearchNode(location.x - 1, location.y, parent);
+		if(canAdd(node.toString()))
+		{
+			open.add(node);
+		}
+	}
+	
+	protected SearchNode createSearchNode(int row, int col, SearchNode parent)
+	{
+		return new SearchNode(new Point(row, col), parent);
+	}
 	
 	protected boolean canAdd(String node)
 	{
@@ -73,9 +185,6 @@ public abstract class AbstractHero
 		final SearchNode parent;
 		final Point location;
 		final Direction initial;
-		List<Decision> initialDecisions;
-		Direction direction;
-		List<Decision> decisions;
 		int danger = 0;
 		protected boolean safe = false;
 		
@@ -83,26 +192,12 @@ public abstract class AbstractHero
 		{
 			this.location = location;
 			this.parent = parent;
-			direction = Direction.DOWN;
-			initial = direction;
-			this.decisions = new ArrayList<Decision>();
-			initialDecisions = new ArrayList<Decision>();
 		}
 		
 		public SearchNode(Point location, SearchNode parent, int d)
 		{
 			this(location, parent);
 			danger = d;
-		}
-		
-		public SearchNode(Point location, SearchNode parent, Direction direction)
-		{
-			this.location = location;
-			this.parent = parent;
-			this.direction = direction;
-			initial = this.direction;
-			this.decisions = new ArrayList<Decision>();
-			initialDecisions = new ArrayList<Decision>();
 		}
 		
 		public List<Point> getPath()
@@ -126,44 +221,6 @@ public abstract class AbstractHero
 		public SearchNode getParent()
 		{
 			return parent;
-		}
-		
-		public void setDirection(Direction direction)
-		{
-			this.direction = direction;
-		}
-		
-		public void setDecisions(List<Decision> decisions)
-		{
-			this.decisions = decisions;
-		}
-		
-		public Direction getDirection()
-		{
-			return direction;
-		}
-		
-		public List<Decision> getDecisions()
-		{
-			return decisions;
-		}
-		
-		public boolean addToDecisions(List<Decision> toAdd)
-		{
-			return decisions.addAll(toAdd);
-		}
-		
-		public void setInitialDecisions(List<Decision> initialDecisions)
-		{
-			this.initialDecisions.clear();
-			this.initialDecisions.addAll(initialDecisions);
-		}
-		
-		public void setToInitial()
-		{
-			direction = initial;
-			decisions.clear();
-			decisions.addAll(initialDecisions);
 		}
 		
 		@Override
@@ -213,28 +270,6 @@ public abstract class AbstractHero
 				return 0;
 			}
 			return danger - o.danger;
-		}
-	}
-	
-	public class GamePath
-	{
-		List<Point> path;
-		List<Decision> decisions;
-		
-		public GamePath(List<Point> path, List<Decision> decisions)
-		{
-			this.path = path;
-			this.decisions = decisions;
-		}
-		
-		public List<Point> getPath()
-		{
-			return path;
-		}
-		
-		public List<Decision> getDecisions()
-		{
-			return decisions;
 		}
 	}
 }
