@@ -15,7 +15,7 @@ public class Test {
 		board.setCellStatus(3, 0, Status.PIT);
 		board.setCellStatus(3, 3, Status.PIT);
 		
-		AbstractHero hero = new BreadthSearchHero(board);
+		AbstractHero hero = new HeuristicHero(board);
 		hero.solve();
 		List<DepthSearchHero.GamePath> list = hero.getPaths();
 		

@@ -22,6 +22,7 @@ public abstract class AbstractHero
 	protected Point start;
 	protected boolean ranIntoWall = false;
 	protected List<GamePath> paths;
+	protected SearchNode currentNode;
 	
 	protected AbstractHero(GameBoard board)
 	{
@@ -67,7 +68,7 @@ public abstract class AbstractHero
 		return false;
 	}
 	
-	public class SearchNode
+	public class SearchNode implements Comparable<SearchNode>
 	{
 		final SearchNode parent;
 		final Point location;
@@ -75,6 +76,8 @@ public abstract class AbstractHero
 		List<Decision> initialDecisions;
 		Direction direction;
 		List<Decision> decisions;
+		int danger = 0;
+		protected boolean safe = false;
 		
 		public SearchNode(Point location, SearchNode parent)
 		{
@@ -84,6 +87,12 @@ public abstract class AbstractHero
 			initial = direction;
 			this.decisions = new ArrayList<Decision>();
 			initialDecisions = new ArrayList<Decision>();
+		}
+		
+		public SearchNode(Point location, SearchNode parent, int d)
+		{
+			this(location, parent);
+			danger = d;
 		}
 		
 		public SearchNode(Point location, SearchNode parent, Direction direction)
@@ -161,6 +170,49 @@ public abstract class AbstractHero
 		public String toString()
 		{
 			return "(" + location.x + "," + location.y + ")";
+		}
+		
+		public int getBasicDistance(SearchNode s)
+		{
+			return Math.abs(s.location.x - location.x) + Math.abs(s.location.y - location.y); 
+		}
+
+		public void safetyDance()
+		{
+			danger = 0;
+			safe = true;
+		}
+		
+		public void setDanger(int d)
+		{
+			if(!safe)
+				danger = d;
+		}
+		
+		public void incrementDanger(int d)
+		{
+			if(d == 0)
+				safetyDance();
+			if(!safe)
+				danger += d;
+		}
+		
+		public int getDanger()
+		{
+			return danger;
+		}
+
+		@Override
+		public int compareTo(SearchNode o) { 
+			if(danger - o.danger == 0)
+			{
+				if(currentNode.getBasicDistance(this) < currentNode.getBasicDistance(o))
+					return -1;
+				if(currentNode.getBasicDistance(this) > currentNode.getBasicDistance(o))
+					return 1;
+				return 0;
+			}
+			return danger - o.danger;
 		}
 	}
 	
