@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 public class HeuristicHero extends AbstractHero 
 {
@@ -51,7 +52,9 @@ public class HeuristicHero extends AbstractHero
 		}
 		addDanger(node, danger);
 	}
-
+	
+	
+	
 	private void addDanger(SearchNode n, int danger)
 	{
 		if(!nodes.containsKey(n.toString()))

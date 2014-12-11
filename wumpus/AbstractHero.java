@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Abstract hero agent
@@ -42,7 +43,7 @@ public abstract class AbstractHero
 	{
 		List<List<Point>> paths = new ArrayList<List<Point>>();
 		open.add(new SearchNode(start, null));
-		SearchNode currentNode = null;
+		currentNode = null;
 		while(!open.isEmpty())
 		{
 			List<Point> path = new ArrayList<Point>();
@@ -150,17 +151,20 @@ public abstract class AbstractHero
 		final Point location;
 		int danger = 0;
 		protected boolean safe = false;
+		private int rand;
 		
 		public SearchNode(Point location, SearchNode parent)
 		{
 			this.location = location;
 			this.parent = parent;
+			rand = (new Random().nextInt(50));
 		}
 		
 		public SearchNode(Point location, SearchNode parent, int d)
 		{
 			this(location, parent);
 			danger = d;
+			rand = (new Random().nextInt(50));
 		}
 		
 		public List<Point> getPath()
@@ -184,6 +188,11 @@ public abstract class AbstractHero
 		public SearchNode getParent()
 		{
 			return parent;
+		}
+		
+		public int getRand()
+		{
+			return rand;
 		}
 		
 		@Override
@@ -224,14 +233,14 @@ public abstract class AbstractHero
 
 		@Override
 		public int compareTo(SearchNode o) { 
-			if(currentNode == null) return -1;
+			if(currentNode == null) return danger - o.danger;
 			if(danger - o.danger == 0)
 			{
 				if(currentNode.getBasicDistance(this) < currentNode.getBasicDistance(o))
 					return -1;
 				if(currentNode.getBasicDistance(this) > currentNode.getBasicDistance(o))
 					return 1;
-				return 0;
+				return this.getRand() - o.getRand();
 			}
 			return danger - o.danger;
 		}
