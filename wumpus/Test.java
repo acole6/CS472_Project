@@ -1,6 +1,7 @@
 package wumpus;
 
 import java.awt.Point;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,9 +37,9 @@ public class Test
 		" P                  ",
 	};
 	 
-	public static void main(String[] args) 
+	public static void main(String[] args) throws FileNotFoundException 
 	{	
-		final GameBoard board = new GameBoard(mediumBoard);
+		final GameBoard board = new GameBoard("mediumBoard.txt");
 		
 		ArrayList<AbstractHero> heroes = new ArrayList<AbstractHero>() {{
 			add(new DepthSearchHero(board));
@@ -52,17 +53,21 @@ public class Test
 			System.out.println("-----------------------------------------------");
 			List<List<Point>> paths = hero.solve();
 			int solutionPathLength = 0;
-			for(List<Point> path : paths)
+			int died = 0;
+			for(int i = 0; i < paths.size(); i++)
 			{
-				String str = "";
-				for(Point point : path)
+				List<Point> path = paths.get(i);
+				if(i == paths.size() - 1)
 				{
-					str += point.toString() + " ";
+					solutionPathLength = path.size();
 				}
-				System.out.println(str);
-				solutionPathLength = path.size();
+				else
+				{
+					died++;
+				}
 			}
 			System.out.println("Nodes visited: " + hero.getNodesVisited());
+			System.out.println("Times died: " + died);
 			System.out.println("Solution path length: " + solutionPathLength);
 			System.out.println("-----------------------------------------------");
 		}

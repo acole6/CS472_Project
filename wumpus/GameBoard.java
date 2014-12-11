@@ -1,7 +1,10 @@
 package wumpus;
 
 import java.awt.Point;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class GameBoard
 {
@@ -60,12 +63,35 @@ public class GameBoard
 	  }
    }
   
-  public GameBoard(String[] rows)
+  public GameBoard(String gridFile) throws FileNotFoundException
   {
 	  percepts = new boolean[5];
 	  heroLocation = new Point(0, 0);
 	  heroDirection = Direction.DOWN;
 	  
+	  File file = new File(gridFile);
+	  ArrayList<String> rows = new ArrayList<String>();
+	  Scanner scan = new Scanner(file);
+	  int length = 0;
+	  while(scan.hasNextLine())
+	  {
+		  rows.add(scan.nextLine());
+		  length++;
+	  }
+	  scan.close();
+	  init(rows.toArray(new String[length]));
+  }
+  
+  public GameBoard(String[] rows)
+  {
+	  percepts = new boolean[5];
+	  heroLocation = new Point(0, 0);
+	  heroDirection = Direction.DOWN;
+	  init(rows);
+  }
+  
+  private void init(String[] rows)
+  {
 	  int width = rows[0].length();
 	  int height = rows.length;
 	  cells = new Cell[height][width];
