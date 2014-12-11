@@ -60,6 +60,73 @@ public class GameBoard
 	  }
    }
   
+  public GameBoard(String[] rows)
+  {
+	  percepts = new boolean[5];
+	  heroLocation = new Point(0, 0);
+	  heroDirection = Direction.DOWN;
+	  
+	  int width = rows[0].length();
+	  int height = rows.length;
+	  cells = new Cell[height][width];
+	  for (int row = 0; row < height; ++row)
+	  {
+		  String s = rows[row];
+	      for (int col = 0; col < width; ++col)
+	      {
+	    	Cell current = new Cell(row, col);
+	        char c = s.charAt(col);
+	        if (c == 'G')
+	        {
+	          current.setStatus(Status.GOLD);;
+	        }
+	        else if (c == 'P')
+	        {
+	          current.setStatus(Status.PIT);
+	        }
+	        else if (c == 'W')
+	        {
+	          current.setStatus(Status.WUMPUS);
+	          start = current;
+	        }
+	        else 
+	        {
+	          current.setStatus(Status.EMPTY);
+	        }  
+	        cells[row][col] = current;
+	        if(row == 0 && col == 0) start = current;
+	      }
+	    }
+	  
+	  for (int row = 0; row < height; ++row)
+	  {
+		  for (int col = 0; col < width; ++col)
+		  {
+			  Cell square = cells[row][col];
+			  if (isAccessible(square))
+			  {
+				  // add edges from this to neighbors
+				  if (row > 0 && isAccessible(cells[row - 1][col]))
+				  {
+					  square.addNeighbor(cells[row - 1][col]);
+				  }
+				  if (col > 0 && isAccessible(cells[row][col - 1]))
+				  {
+					  square.addNeighbor(cells[row][col - 1]);
+				  }
+				  if (row < height - 1 && isAccessible(cells[row + 1][col]))
+				  {
+					  square.addNeighbor(cells[row + 1][col]);
+				  }
+				  if (col < width - 1 && isAccessible(cells[row][col + 1]))
+				  {
+					  square.addNeighbor(cells[row][col + 1]);
+				  }
+			  }
+		  }
+	  }
+  }
+  
   public boolean[] getPercepts(int row, int col)
   {
 	  Cell cell = cells[row][col];
@@ -94,7 +161,7 @@ public class GameBoard
   
   public void reset()
   {
-	  heroLocation = new Point(0, 0);
+	  heroLocation.setLocation(0, 0);
 	  heroDirection = Direction.DOWN;
 	  for(int i = 0; i < getRows(); i++)
 	  {

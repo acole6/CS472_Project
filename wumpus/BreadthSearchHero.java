@@ -15,4 +15,3 @@ public class BreadthSearchHero extends AbstractHero
 		return list.removeFirst();
 	}
 }
-

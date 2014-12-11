@@ -20,7 +20,7 @@ public abstract class AbstractHero
 	protected HashSet<String> wall;
 	protected String wumpus;
 	protected Point start;
-	protected List<List<Point>> paths;
+	protected int nodesVisited;
 	protected SearchNode currentNode;
 	
 	protected AbstractHero(GameBoard board)
@@ -31,28 +31,34 @@ public abstract class AbstractHero
 		exploring = new HashSet<String>();
 		pit = new HashSet<String>();
 		wall = new HashSet<String>();
-		paths = new ArrayList<List<Point>>();
 	}
 	
-	public List<List<Point>> getPaths()
+	public int getNodesVisited()
 	{
-		return paths;
+		return nodesVisited;
 	}
 	
-	public void solve()
+	public List<List<Point>> solve()
 	{
+		List<List<Point>> paths = new ArrayList<List<Point>>();
 		open.add(new SearchNode(start, null));
 		SearchNode currentNode = null;
-		List<Point> explore = new ArrayList<Point>();
 		while(!open.isEmpty())
 		{
+			List<Point> path = new ArrayList<Point>();
 			currentNode = pop(open);
+			nodesVisited++;
 			if(board.isAccessible(currentNode.getLocation()))
 			{
 				Status status = board.getCell(currentNode.getLocation().x, currentNode.getLocation().y).getStatus();
 				if(status == Status.GOLD)
 				{
-					explore = currentNode.getParent().getPath();
+					path = currentNode.getPath();
+					for(int i = path.size() - 2; i >= 0; i--)
+					{
+						path.add(path.get(i));
+					}
+					paths.add(path);
 					break;
 				}
 				else if(status == Status.PIT)
@@ -76,49 +82,7 @@ public abstract class AbstractHero
 				wall.add(currentNode.toString());
 			}
 		}
-		
-		open.clear();
-		exploring.clear();
-		open.add(new SearchNode(currentNode.getLocation(), null));
-		while(!open.isEmpty())
-		{
-			List<Point> exit = new ArrayList<Point>();
-			currentNode = pop(open);
-			if(board.isAccessible(currentNode.getLocation()))
-			{
-				Status status = board.getCell(currentNode.getLocation().x, currentNode.getLocation().y).getStatus();
-				if(currentNode.getLocation().equals(start))
-				{	
-					exit.addAll(explore);
-					exit.addAll(currentNode.getPath());
-					paths.add(exit);
-					break;
-				}
-				else if(status == Status.WUMPUS)
-				{
-					wumpus = currentNode.toString();
-					exit.addAll(explore);
-					exit.addAll(currentNode.getPath());
-					paths.add(exit);
-				}
-				else if(status == Status.PIT)
-				{
-					pit.add(currentNode.toString());
-					exit.addAll(explore);
-					exit.addAll(currentNode.getPath());
-					paths.add(exit);
-				}
-				else
-				{
-					exploring.add(currentNode.toString());
-					addNewChildrenToOpen(currentNode);
-				}
-			}
-			else
-			{
-				wall.add(currentNode.toString());
-			}
-		}
+		return paths;
 	}
 	
 	protected abstract SearchNode pop(LinkedList<SearchNode> list);
@@ -184,7 +148,6 @@ public abstract class AbstractHero
 	{
 		final SearchNode parent;
 		final Point location;
-		final Direction initial;
 		int danger = 0;
 		protected boolean safe = false;
 		
@@ -261,6 +224,7 @@ public abstract class AbstractHero
 
 		@Override
 		public int compareTo(SearchNode o) { 
+			if(currentNode == null) return -1;
 			if(danger - o.danger == 0)
 			{
 				if(currentNode.getBasicDistance(this) < currentNode.getBasicDistance(o))
