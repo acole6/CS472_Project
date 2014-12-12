@@ -8,6 +8,14 @@ import java.util.Random;
 
 public class Test 
 {
+	
+	
+	/**
+	 * Game boards the game might run on. 
+	 * W represents a Wumpus, P represents a pit,
+	 * G represents the gold, and the player begins
+	 * in the upper left corner
+	 */
 	private static final String[] smallBoard = {
 	      " W P",
 	      "    ",
@@ -159,12 +167,12 @@ public class Test
 				else if (hero.getClass().getSimpleName().equals("BreadthSearchHero"))
 				{
 					bfsPath = hero.getNodesVisited();
-					bfsDeath = died;
+					bfsDeath += died;
 				}
 				else
 				{
 					dfsPath = hero.getNodesVisited();
-					dfsDeath = died;
+					dfsDeath += died;
 				}
 				System.out.println("Solution path length: " + solutionPathLength);
 				System.out.println("-----------------------------------------------");
@@ -174,9 +182,11 @@ public class Test
 		System.out.println("Average heuristic hero deaths: " + avgHHero/1000);
 		System.out.println("Average heuristic hero path length: " + avgPath/1000);
 		System.out.println("Heuristic final score: " + (10000.0 - (200.0*(avgHHero/1000)) - (avgPath/1000) * 3.0));
-		System.out.println("BFS death: " + bfsDeath);
-		System.out.println("BFS path length: " + bfsPath);
-		System.out.println("DFS death: " + dfsDeath);
-		System.out.println("DFS path length: " + dfsPath);
+		System.out.println("BFS average deaths: " + bfsDeath/1000);
+		System.out.println("BFS average path length: " + bfsPath/1000);
+		System.out.println("Heuristic final score: " + (10000.0 - (200.0*(avgHHero/1000)) - (avgPath/1000) * 3.0));
+		System.out.println("DFS average deaths: " + dfsDeath/1000);
+		System.out.println("DFS average path length: " + dfsPath/1000);
+		System.out.println("Heuristic final score: " + (10000.0 - (200.0*(avgHHero/1000)) - (avgPath/1000) * 3.0));
 	}
 }
