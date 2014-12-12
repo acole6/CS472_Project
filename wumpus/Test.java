@@ -122,15 +122,21 @@ public class Test
 	
 	public static void main(String[] args) throws FileNotFoundException 
 	{	
-		GameBoard[] boards = {new GameBoard(mediumBoard1),new GameBoard(mediumBoard2),new GameBoard(mediumBoard3),new GameBoard(mediumBoard4)};
+		
+		//Alternate these comments for running on 20x20 boards or 50x50 boards
+		
+		//GameBoard[] boards = {new GameBoard(mediumBoard1),new GameBoard(mediumBoard2),new GameBoard(mediumBoard3),new GameBoard(mediumBoard4)};
+		GameBoard[] boards = {new GameBoard("largeboard1.txt"), new GameBoard("largeboard2.txt"),new GameBoard("largeboard3.txt"),new GameBoard("largeboard4.txt")};
+		
+		//Heuristic Hero variables
 		double avgHHero = 0;
 		double hNodes = 0;
 		double hLength = 0;
-		
+		//DFS Hero variables
 		double dfsNodes = 0;
 		double dfsDeath = 0;
 		double dfsLength = 0;
-		
+		//BFS Hero variables
 		double bfsNodes = 0;
 		double bfsDeath = 0;
 		double bfsLength = 0;
@@ -141,7 +147,7 @@ public class Test
 		Random rand = new Random();
 		for(; loop < 1000; loop++)
 		{
-			GameBoard board = boards[rand.nextInt(4)];
+			GameBoard board = boards[rand.nextInt(boards.length)];
 			ArrayList<AbstractHero> heroes = new ArrayList<AbstractHero>() ;
 				heroes.add(new DepthSearchHero(board));
 				heroes.add(new BreadthSearchHero(board));
