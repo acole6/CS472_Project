@@ -124,9 +124,10 @@ public class Test
 	{	
 		
 		//Alternate these comments for running on 20x20 boards or 50x50 boards
+		//WARNING ----- Running the large loop on the large board takes a LONG time (~40 minutes)
 		
-		//GameBoard[] boards = {new GameBoard(mediumBoard1),new GameBoard(mediumBoard2),new GameBoard(mediumBoard3),new GameBoard(mediumBoard4)};
-		GameBoard[] boards = {new GameBoard("largeboard1.txt"), new GameBoard("largeboard2.txt"),new GameBoard("largeboard3.txt"),new GameBoard("largeboard4.txt")};
+		GameBoard[] boards = {new GameBoard(mediumBoard1),new GameBoard(mediumBoard2),new GameBoard(mediumBoard3),new GameBoard(mediumBoard4)};
+		//GameBoard[] boards = {new GameBoard("largeboard1.txt"), new GameBoard("largeboard2.txt"),new GameBoard("largeboard3.txt"),new GameBoard("largeboard4.txt")};
 		
 		//Heuristic Hero variables
 		double avgHHero = 0;
