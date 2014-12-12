@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Test 
 {
@@ -14,7 +15,7 @@ public class Test
 	      "P  P",
 	  };
 	
-	private static final String[] mediumBoard = {
+	private static final String[] mediumBoard1 = {
 		" P                 P",
 		"  P     P           ",
 		"                    ",
@@ -37,9 +38,83 @@ public class Test
 		" P                  ",
 	};
 	 
+	
+	private static final String[] mediumBoard2 = {
+		" P                 P",
+		"  P     P           ",
+		"             G      ",
+		" P                  ",
+		"                    ",
+		"              W     ",
+		"   P                ",
+		"                    ",
+		"                    ",
+		"   P           P    ",
+		"                    ",
+		"       P            ",
+		"                    ",
+		"            P       ",
+		"                    ",
+		"    P               ",
+		"                    ",
+		"             P      ",
+		"                    ",
+		" P                  ",
+	};
+	
+	
+	private static final String[] mediumBoard3 = {
+		" P                 P",
+		"  P     P           ",
+		"                    ",
+		" P                  ",
+		"                    ",
+		"              W     ",
+		"   P                ",
+		"                    ",
+		"                    ",
+		"   P           P    ",
+		"                    ",
+		"       P            ",
+		"                    ",
+		"            P       ",
+		"                    ",
+		"    P               ",
+		"                    ",
+		"             P      ",
+		"       G            ",
+		" P                  ",
+	};
+	
+	private static final String[] mediumBoard4 = {
+		" PG                P",
+		"  P     P           ",
+		"                    ",
+		" P                  ",
+		"                    ",
+		"              W     ",
+		"   P                ",
+		"                    ",
+		"                    ",
+		"   P           P    ",
+		"                    ",
+		"       P            ",
+		"                    ",
+		"            P       ",
+		"                    ",
+		"    P               ",
+		"                    ",
+		"             P      ",
+		"                    ",
+		" P                  ",
+	};
+	
+	
+	
+	
 	public static void main(String[] args) throws FileNotFoundException 
 	{	
-		final GameBoard board = new GameBoard(mediumBoard);
+		GameBoard[] boards = {new GameBoard(mediumBoard1),new GameBoard(mediumBoard2),new GameBoard(mediumBoard3),new GameBoard(mediumBoard4)};
 		double avgHHero = 0;
 		double avgPath = 0;
 		int dfsPath = 0;
@@ -47,8 +122,10 @@ public class Test
 		int dfsDeath = 0;
 		int bfsDeath = 0;
 		int loop = 0;
+		Random rand = new Random();
 		for(; loop < 1000; loop++)
 		{
+			GameBoard board = boards[rand.nextInt(4)];
 			ArrayList<AbstractHero> heroes = new ArrayList<AbstractHero>() ;
 				heroes.add(new DepthSearchHero(board));
 				heroes.add(new BreadthSearchHero(board));
@@ -96,6 +173,7 @@ public class Test
 		System.out.println("Run " + loop + " times");
 		System.out.println("Average heuristic hero deaths: " + avgHHero/1000);
 		System.out.println("Average heuristic hero path length: " + avgPath/1000);
+		System.out.println("Heuristic final score: " + (10000.0 - (200.0*(avgHHero/1000)) - (avgPath/1000) * 3.0));
 		System.out.println("BFS death: " + bfsDeath);
 		System.out.println("BFS path length: " + bfsPath);
 		System.out.println("DFS death: " + dfsDeath);
