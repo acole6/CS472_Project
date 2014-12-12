@@ -4,7 +4,6 @@ import java.awt.Point;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 public class HeuristicHero extends AbstractHero 
 {
@@ -15,6 +14,13 @@ public class HeuristicHero extends AbstractHero
 		super(board);
 	}
 	
+	/**
+	 * Adds children to parent node. It evaluates the danger level of the each node and adds it to the mapping.
+	 * Danger is increased based on the number of percepts. If stench or breeze is detected, the danger level of all children
+	 * of the current node is increased by one. If both percepts are detected, it is increased by two. 
+	 * 
+	 * @param The parent to add children to
+	 */
 	@Override
 	protected void addNewChildrenToOpen(SearchNode parent)
 	{
@@ -69,6 +75,9 @@ public class HeuristicHero extends AbstractHero
 		}
 	}
 	
+	/**
+	 * Retrieves the closest, least dangerous node to be searched, evaluated by the compareTo method.
+	 */
 	@Override
 	protected SearchNode pop(LinkedList<SearchNode> list) {
 		Collections.sort(list);

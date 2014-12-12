@@ -231,6 +231,16 @@ public abstract class AbstractHero
 			return danger;
 		}
 
+		
+		/**
+		 *Implementation of compareTo to allow sorting. 
+		 *
+		 *Nodes are sorted based on their danger level, if the danger levels are equal, 
+		 *the closer node is selected. If the nodes are equidistant, the node is selected at random,
+		 *using an random integer assigned to the instance of the node at the time of instantiation
+		 *
+		 *@param The other node to be compared to
+		 */
 		@Override
 		public int compareTo(SearchNode o) { 
 			if(currentNode == null) return danger - o.danger;
