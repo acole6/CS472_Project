@@ -55,7 +55,7 @@ public abstract class AbstractHero
 				if(status == Status.GOLD)
 				{
 					path = currentNode.getPath();
-					for(int i = path.size() - 2; i >= 0; i--)
+					for(int i = path.size() - 2; i >= 0; i--) //reverse the path but skip gold square
 					{
 						path.add(path.get(i));
 					}
