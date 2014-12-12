@@ -42,7 +42,12 @@ public class Test
 		final GameBoard board = new GameBoard(mediumBoard);
 		double avgHHero = 0;
 		double avgPath = 0;
-		for(int loop = 0; loop < 1000; loop++)
+		int dfsPath = 0;
+		int bfsPath = 0;
+		int dfsDeath = 0;
+		int bfsDeath = 0;
+		int loop = 0;
+		for(; loop < 1000; loop++)
 		{
 			ArrayList<AbstractHero> heroes = new ArrayList<AbstractHero>() ;
 				heroes.add(new DepthSearchHero(board));
@@ -59,7 +64,7 @@ public class Test
 				for(int i = 0; i < paths.size(); i++)
 				{
 					List<Point> path = paths.get(i);
-					if(i == paths.size() - 1)
+					if(!path.isEmpty() && path.get(path.size()-1).equals(new Point(0,0)))
 					{
 						solutionPathLength = path.size();
 					}
@@ -74,15 +79,26 @@ public class Test
 					avgHHero += died;
 					avgPath += hero.getNodesVisited();
 				}
-				//else if (hero.getClass().getSimpleName().equals("BreadthSearchHero"))
-				//	avgBFSHero += died;
-				//else
-				//	avgDFSHero += died;
+				else if (hero.getClass().getSimpleName().equals("BreadthSearchHero"))
+				{
+					bfsPath = hero.getNodesVisited();
+					bfsDeath = died;
+				}
+				else
+				{
+					dfsPath = hero.getNodesVisited();
+					dfsDeath = died;
+				}
 				System.out.println("Solution path length: " + solutionPathLength);
 				System.out.println("-----------------------------------------------");
 			}
 		}
+		System.out.println("Run " + loop + " times");
 		System.out.println("Average heuristic hero deaths: " + avgHHero/1000);
 		System.out.println("Average heuristic hero path length: " + avgPath/1000);
+		System.out.println("BFS death: " + bfsDeath);
+		System.out.println("BFS path length: " + bfsPath);
+		System.out.println("DFS death: " + dfsDeath);
+		System.out.println("DFS path length: " + dfsPath);
 	}
 }
