@@ -1,13 +1,6 @@
 CS472_Project
 =============
 
-Need to do
-- Add shoot decision to try to kill wumpus (we will assume the hero starts with an arrow to simplify things)
-- clean up gui to make it look and work better
-- make a hero that uses DFS, BFS and one of those but with a heuristic. Only one hero class should be needed to implement all of these and which type of search that is done is given in the constructor
-- methods where Hero and GameBoard interact may need to be modified to better suit the Hero class that uses search AI
-- Add dropdown to GUI to select an AI
-- Add button on GUI to put the GUI at its initial state so that a new grid and AI can be selected
-- will add more when I think of something else
+We implemented a simplified version of Wumpus World that uses search algoriithms to find a path to the gold and back. The main classes to look at are AbstracHero, BreadthSearchHero, Cell, DepthSearchHero, GameBoard, HeuristicHero and Test. The hero classes extend AbstractHero and take in a GameBoard to solve. The Test class show the results of each of the search heroes on grids of varying sizes. 
 
-This site is a good reference for Wumpus World info: http://www.cis.temple.edu/~giorgio/cis587/readings/wumpus.shtml
+The gui code can mostly be ignored as it was designed for a knowledge-based hero agent that we did not completely flesh out.
